@@ -14,15 +14,20 @@ if [ -z ${python+x} ]; then
 fi
 
 #create temporary dir
-CURR_DIR="$(PWD)"
+CURR_DIR="$(pwd)"
 TMP_DIR="$CURR_DIR/$(date +"%Y-%m-%d_%H-%M-%S")_$RANDOM"
 mkdir $TMP_DIR
-cp $requirements $TMP_DIR
+cp $requirements $TMP_DIR/requirements.txt
 cd $TMP_DIR
 
 #create lambda layer
-docker run --rm --name lambda_layer -v "$PWD":/var/task "public.ecr.aws/sam/build-$python" /bin/sh -c "pip install -r $requirements -t python/lib/$python/site-packages/; exit" &&
-  zip -r $CURR_DIR/lambda_layer.zip python >/dev/null
+docker run \
+  --rm \
+  --name lambda_layer \
+  -v "$PWD":/var/task "public.ecr.aws/sam/build-$python" /bin/sh \
+  -c "pip install -r requirements.txt -t python/lib/$python/site-packages/; exit" \
+  && 
+zip -r $CURR_DIR/lambda_layer.zip python >/dev/null
 
 #cleanup
 rm -rf $TMP_DIR
