@@ -17,13 +17,17 @@ fi
 CURR_DIR="$(pwd)"
 TMP_DIR="$CURR_DIR/$(date +"%Y-%m-%d_%H-%M-%S")_$RANDOM"
 mkdir $TMP_DIR
-cp $requirements $TMP_DIR
-TMP_REQ="$CURR_DIR/$requirements"
-cd $CURR_DIR
+cp $requirements $TMP_DIR/requirements.txt
+cd $TMP_DIR
 
 #create lambda layer
-docker run --rm --name lambda_layer -v "$CURR_DIR":/var/task "public.ecr.aws/sam/build-$python" /bin/sh -c "pip install -r $TMP_REQ -t python/lib/$python/site-packages/; exit" &&
-  zip -r $CURR_DIR/lambda_layer.zip python >/dev/null
+docker run \
+  --rm \
+  --name lambda_layer \
+  -v "$PWD":/var/task "public.ecr.aws/sam/build-$python" /bin/sh \
+  -c "pip install -r requirements.txt -t python/lib/$python/site-packages/; exit" \
+  && 
+zip -r $CURR_DIR/lambda_layer.zip python >/dev/null
 
 #cleanup
 rm -rf $TMP_DIR
